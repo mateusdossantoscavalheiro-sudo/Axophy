@@ -1,0 +1,135 @@
+body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    user-select: none; /* Evita selecionar o texto sem querer ao arrastar */
+}
+
+.glass-panel {
+    background: rgba(15, 23, 42, 0.95);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+}
+
+/* O Mundo da Câmera (Pan e Zoom) */
+.viewport {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background-color: #020617;
+    cursor: grab;
+    outline: none;
+}
+
+.viewport:active {
+    cursor: grabbing;
+}
+
+/* O Canvas da Fábrica Gigante */
+.factory-floor {
+    position: absolute;
+    width: 3000px;
+    height: 2000px;
+    background-color: #1e293b;
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    transform-origin: 0 0;
+}
+
+/* --- ESTADOS DE SELEÇÃO E CONTROLE REMOTO --- */
+.cad-element {
+    transition: filter 0.2s, box-shadow 0.2s, outline 0.2s;
+}
+
+.cad-element.selected {
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.5));
+    outline: 2px dashed rgba(255, 255, 255, 0.8);
+    z-index: 100 !important;
+}
+
+/* CLASSE MÁGICA: O Gêmeo Digital assumido pelo Operador piscará em verde */
+.cad-element.remote-active {
+    filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.9));
+    outline: 2px solid #22c55e;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { outline-color: rgba(34, 197, 94, 1); }
+    50% { outline-color: rgba(34, 197, 94, 0.3); }
+    100% { outline-color: rgba(34, 197, 94, 1); }
+}
+
+/* --- ATIVOS (MÁQUINAS) --- */
+.draggable-asset {
+    position: absolute;
+    cursor: move;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+}
+
+.asset-icon {
+    width: 44px;
+    height: 44px;
+    color: #94a3b8;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+    pointer-events: none;
+}
+
+.asset-label {
+    margin-top: 4px;
+    background: rgba(0,0,0,0.8);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: bold;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* --- ZONAS DE CONSTRUÇÃO --- */
+.floor-zone {
+    position: absolute;
+    cursor: move;
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.zone-wall {
+    background-color: #94a3b8;
+    border: 1px solid #475569;
+}
+
+.zone-passage {
+    background: repeating-linear-gradient(45deg, rgba(234, 179, 8, 0.2), rgba(234, 179, 8, 0.2) 10px, transparent 10px, transparent 20px);
+    border: 2px dashed #eab308;
+}
+
+.zone-machine {
+    background: rgba(34, 197, 94, 0.1);
+    border: 2px dashed #22c55e;
+}
+
+/* --- ÂNCORAS DE REDIMENSIONAMENTO (4 Cantos) --- */
+.resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    border: 1px solid #0f172a;
+    display: none;
+}
+
+.floor-zone.selected .resize-handle {
+    display: block; /* Só mostra as âncoras se a parede estiver selecionada */
+}
+
+.resize-nw { top: -5px; left: -5px; cursor: nw-resize; }
+.resize-ne { top: -5px; right: -5px; cursor: ne-resize; }
+.resize-sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+.resize-se { bottom: -5px; right: -5px; cursor: se-resize; }
