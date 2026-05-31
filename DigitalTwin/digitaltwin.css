@@ -1,0 +1,31 @@
+/* Fundo Dinâmico de Fábrica com Desfoque */
+.scada-bg {
+    background-image: url('https://images.unsplash.com/photo-1565514020179-026b92b84bb6?q=80&w=1920&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+}
+
+.glass-panel {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Cores de Estado do Ícone */
+.status-STOPPED { color: #94a3b8; filter: drop-shadow(0 0 5px rgba(148, 163, 184, 0.5)); }
+.status-OPERATING { color: #22c55e; filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.8)); }
+.status-MAINTENANCE { color: #3b82f6; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.6)); }
+.status-LOCKED_FAILURE { color: #ef4444; filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.9)); animation: pulse-fast 1s infinite; }
+
+@keyframes pulse-fast {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* Linhas Diretrizes SCADA */
+.scada-line {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.3);
+    z-index: 0;
+}

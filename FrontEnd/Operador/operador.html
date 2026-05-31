@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axophy - IHM Operador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <link rel="stylesheet" href="operador.css">
+</head>
+<body class="h-screen w-screen flex items-center justify-center p-4">
+
+    <div class="bg-slate-700 p-2 md:p-4 rounded-xl shadow-2xl border border-slate-600 w-full max-w-5xl">
+        
+        <div class="hmi-screen rounded-lg flex flex-col h-full min-h-[600px] border-4 border-slate-900 text-slate-200">
+            
+            <header class="bg-slate-900 border-b-2 border-slate-800 p-4 flex justify-between items-center z-10 relative">
+                <div>
+                    <h1 class="text-xl font-black text-blue-500 tracking-wider">AXOPHY <span class="text-slate-400 font-normal text-sm ml-2">HMI OS v2.0</span></h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="conn-status" class="text-xs font-bold px-2 py-1 bg-red-900 text-red-300 border border-red-700 rounded uppercase">COM. OFFLINE</div>
+                    <button onclick="window.location.href='../login.html'" class="text-slate-400 hover:text-white p-2 rounded bg-slate-800 border border-slate-700 hmi-btn">
+                        SAIR
+                    </button>
+                </div>
+            </header>
+
+            <main class="flex-1 p-6 flex flex-col gap-6 z-10 relative">
+                
+                <div class="flex flex-col md:flex-row justify-between items-center bg-slate-800/50 p-4 border border-slate-700 rounded">
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-widest font-bold">Equipamento Alvo</p>
+                        <h2 class="text-2xl font-black text-white">MTR-01 <span class="text-lg font-normal text-slate-300">| Motor de Indução</span></h2>
+                    </div>
+                    
+                    <div class="mt-4 md:mt-0 flex flex-col items-center">
+                        <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Status do Sistema</p>
+                        <div id="status-badge" class="state-STOPPED border-2 text-white font-black px-8 py-2 rounded text-xl uppercase tracking-widest transition-colors">
+                            Aguardando...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1">
+                    
+                    <div class="hmi-display p-4 flex flex-col justify-between">
+                        <div class="text-[10px] md:text-xs text-slate-400 uppercase font-bold tracking-widest border-b border-slate-700 pb-1">Temperatura</div>
+                        <div class="flex items-baseline justify-center gap-1 mt-4">
+                            <span id="val-temp" class="text-4xl md:text-5xl font-light text-blue-300 font-mono">--.-</span>
+                            <span class="text-lg text-slate-500">°C</span>
+                        </div>
+                    </div>
+
+                    <div class="hmi-display p-4 flex flex-col justify-between">
+                        <div class="text-[10px] md:text-xs text-slate-400 uppercase font-bold tracking-widest border-b border-slate-700 pb-1">Corrente Elétrica</div>
+                        <div class="flex items-baseline justify-center gap-1 mt-4">
+                            <span id="val-curr" class="text-4xl md:text-5xl font-light text-green-300 font-mono">--.-</span>
+                            <span class="text-lg text-slate-500">A</span>
+                        </div>
+                    </div>
+
+                    <div class="hmi-display p-4 flex flex-col justify-between">
+                        <div class="text-[10px] md:text-xs text-slate-400 uppercase font-bold tracking-widest border-b border-slate-700 pb-1">Vibração Axial</div>
+                        <div class="flex items-baseline justify-center gap-1 mt-4">
+                            <span id="val-vib" class="text-4xl md:text-5xl font-light text-yellow-300 font-mono">--.-</span>
+                            <span class="text-lg text-slate-500">g</span>
+                        </div>
+                    </div>
+
+                    <div class="hmi-display p-4 flex flex-col justify-between">
+                        <div class="text-[10px] md:text-xs text-slate-400 uppercase font-bold tracking-widest border-b border-slate-700 pb-1">Umidade Relativa</div>
+                        <div class="flex items-baseline justify-center gap-1 mt-4">
+                            <span id="val-hum" class="text-4xl md:text-5xl font-light text-white font-mono">--.-</span>
+                            <span class="text-lg text-slate-500">%</span>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+
+            <footer class="bg-slate-800 p-6 border-t-4 border-slate-900 z-10 relative">
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-3 font-bold border-b border-slate-700 pb-1 w-full">Comandos de Operação (ID: 1)</p>
+                <div class="flex gap-4 h-16">
+                    <button onclick="sendCommand('START')" class="hmi-btn flex-1 bg-green-600 hover:bg-green-500 text-white font-black text-lg rounded border-2 border-green-400 tracking-wider">
+                        START
+                    </button>
+                    <button onclick="sendCommand('STOP')" class="hmi-btn flex-1 bg-red-600 hover:bg-red-500 text-white font-black text-lg rounded border-2 border-red-400 tracking-wider">
+                        EMERGENCY STOP
+                    </button>
+                    <button onclick="sendCommand('MAINTENANCE')" class="hmi-btn flex-1 bg-blue-600 hover:bg-blue-500 text-white font-black text-sm rounded border-2 border-blue-400 tracking-wider">
+                        MANUTENÇÃO
+                    </button>
+                    <button onclick="sendCommand('RESET')" class="hmi-btn flex-1 bg-slate-600 hover:bg-slate-500 text-white font-black text-sm rounded border-2 border-slate-400 tracking-wider">
+                        RESET FALHA
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="operador.js"></script>
+</body>
+</html>

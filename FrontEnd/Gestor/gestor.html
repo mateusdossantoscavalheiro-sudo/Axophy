@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axophy - Management OS</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <link rel="stylesheet" href="gestor.css">
+</head>
+<body class="h-screen w-screen flex flex-col font-sans overflow-hidden p-4 gap-4 text-sm">
+
+    <header class="glass-panel rounded-lg p-4 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-6">
+            <h1 class="text-xl font-black text-blue-500 tracking-wider">AXOPHY <span class="text-slate-400 font-normal text-xs ml-2 uppercase">Gestão de Ativos</span></h1>
+            
+            <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 px-3 py-1.5 rounded">
+                <span class="text-xs text-slate-500 font-bold uppercase">Ativo Focado:</span>
+                <select id="asset-selector" class="bg-transparent outline-none text-blue-300 font-bold text-sm cursor-pointer">
+                    <option value="1">MTR-01 | Motor de Indução Principal</option>
+                    <option value="2">MTR-02 | Exaustor Secundário</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button onclick="exportToPDF()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 px-4 py-1.5 rounded text-xs font-bold transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Exportar Relatório
+            </button>
+            
+            <button onclick="window.location.href='../login.html'" class="text-slate-400 hover:text-white p-1.5 rounded bg-red-900/30 hover:bg-red-900/60 border border-red-900/50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto pr-2 grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        <div class="lg:col-span-4 flex flex-col gap-4">
+            
+            <div id="pdf-kpi" class="glass-panel p-5 rounded-lg flex gap-4 items-center">
+                <div class="w-24 h-24 health-ring relative shrink-0">
+                    <div class="health-ring-inner flex flex-col">
+                        <span class="text-2xl font-black text-green-400">92</span>
+                        <span class="text-[9px] text-slate-500 uppercase font-bold">%</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Índice de Saúde (AHI)</h3>
+                    <p class="text-[10px] text-slate-300 leading-tight">O ativo está operando dentro dos parâmetros ideais. A última anomalia térmica foi mitigada com sucesso.</p>
+                    <div class="mt-3 bg-slate-800 border border-slate-700 p-2 rounded flex justify-between items-center">
+                        <span class="text-[10px] text-slate-400 uppercase">Frota Benchmark</span>
+                        <span class="text-[10px] font-bold text-blue-400">+15% vs Média</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pdf-log" class="glass-panel p-4 rounded-lg flex-1 flex flex-col min-h-[300px]">
+                <h3 class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-3 border-b border-slate-700 pb-2">Log de Diagnóstico e Ações</h3>
+                
+                <div class="flex-1 overflow-y-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="text-[9px] uppercase text-slate-500 sticky top-0 bg-[#0f172a]">
+                            <tr>
+                                <th class="pb-2 font-medium">Tempo</th>
+                                <th class="pb-2 font-medium">Evento Físico</th>
+                                <th class="pb-2 font-medium">Recomendação da IA</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-[10px] text-slate-300">
+                            <tr class="table-row-hover border-t border-slate-800">
+                                <td class="py-2 text-slate-500 font-mono">10:42:15</td>
+                                <td class="py-2"><span class="text-yellow-400 font-bold">Vibração > 8.0g</span><br><span class="text-[9px] text-slate-500">Alerta Secundário</span></td>
+                                <td class="py-2 text-blue-300">Inspecionar alinhamento do eixo.</td>
+                            </tr>
+                            <tr class="table-row-hover border-t border-slate-800">
+                                <td class="py-2 text-slate-500 font-mono">08:15:00</td>
+                                <td class="py-2"><span class="text-green-400 font-bold">Início de Ciclo</span><br><span class="text-[9px] text-slate-500">Operador Manual</span></td>
+                                <td class="py-2 text-slate-500">Operação Nominal.</td>
+                            </tr>
+                            <tr class="table-row-hover border-t border-slate-800 bg-red-900/10">
+                                <td class="py-2 text-red-400 font-mono">Ontem</td>
+                                <td class="py-2"><span class="text-red-500 font-bold">TRIP DE CORRENTE</span><br><span class="text-[9px] text-slate-500">Lock: 14.5A (5s)</span></td>
+                                <td class="py-2 text-red-300 font-bold">Avaliador de sobrecarga ativado. Verificar bobina.</td>
+                            </tr>
+                            <tr class="table-row-hover border-t border-slate-800">
+                                <td class="py-2 text-slate-500 font-mono">Ontem</td>
+                                <td class="py-2"><span class="text-blue-400 font-bold">Modo Manutenção</span><br><span class="text-[9px] text-slate-500">Reset de Sistema</span></td>
+                                <td class="py-2 text-slate-500">Reparo documentado.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="lg:col-span-8 flex flex-col gap-4">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-64">
+                
+                <div id="pdf-trend" class="glass-panel p-4 rounded-lg flex flex-col">
+                    <h3 class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">Tendência Térmica e Carga (Últimos 15 min)</h3>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <div id="pdf-scatter" class="glass-panel p-4 rounded-lg flex flex-col">
+                    <h3 class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">Correlação: Corrente vs Temperatura</h3>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="scatterChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-[250px]">
+                
+                <div id="pdf-pareto" class="glass-panel p-4 rounded-lg flex flex-col">
+                    <h3 class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">Análise de Causa-Raiz (Pareto 30 Dias)</h3>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="paretoChart"></canvas>
+                    </div>
+                </div>
+
+                <div id="pdf-doughnut" class="glass-panel p-4 rounded-lg flex flex-col items-center justify-center">
+                    <h3 class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-4 w-full text-left">Distribuição de Estados (Disponibilidade)</h3>
+                    <div class="w-48 h-48 relative">
+                        <canvas id="doughnutChart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-2xl font-black text-white">85%</span>
+                            <span class="text-[9px] text-slate-400 uppercase">Uptime</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <script src="gestor.js"></script>
+</body>
+</html>

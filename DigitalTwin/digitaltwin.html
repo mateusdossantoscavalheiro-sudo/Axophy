@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axophy - Digital Twin Edge Node</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <link rel="stylesheet" href="digitaltwin.css">
+</head>
+<body class="bg-slate-900 text-slate-200 font-sans h-screen w-screen overflow-hidden flex flex-col">
+
+    <header class="h-16 shrink-0 bg-slate-950 border-b border-slate-800 px-6 flex justify-between items-center z-20 shadow-md">
+        <div class="flex items-center gap-4">
+            <h1 class="text-2xl font-black text-blue-500 tracking-wider">AXOPHY<span class="text-slate-500 font-normal text-sm ml-2">DIGITAL TWIN NODE</span></h1>
+            <span class="bg-slate-800 text-sm rounded border border-slate-700 px-3 py-1 text-blue-300 font-bold">Motor de Indução</span>
+        </div>
+        <div class="flex gap-3 md:gap-4 items-center">
+            <div id="connection-status" class="px-2 py-1 md:px-3 rounded text-[10px] md:text-xs font-bold bg-red-900 text-red-300 border border-red-700 uppercase">MQTT Offline</div>
+            <div id="sim-id" class="px-3 py-1 rounded text-xs font-mono bg-slate-800 text-slate-400 border border-slate-700 hidden sm:block">ASSET_ID: 1</div>
+            
+            <div class="h-6 border-l border-slate-700 hidden sm:block"></div>
+            
+            <button onclick="window.location.href='../FrontEnd/login.html'" class="text-slate-400 hover:text-white hover:bg-red-900/50 p-2 rounded transition-colors" title="Encerrar Sessão">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 relative scada-bg flex items-center justify-center min-h-0">
+        <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm z-0"></div>
+
+        <div id="critical-alert" class="absolute top-8 left-1/2 transform -translate-x-1/2 z-30 hidden flex-col items-center">
+            <svg class="w-12 h-12 md:w-16 md:h-16 text-red-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <span class="bg-red-600 text-white font-bold px-4 py-1 rounded shadow-[0_0_15px_red] mt-2 uppercase tracking-widest text-xs md:text-sm">Intertravamento Ativo</span>
+        </div>
+
+        <div class="relative w-full max-w-5xl h-full flex flex-col md:flex-row items-center justify-between p-4 md:p-12 z-10">
+            
+            <div class="flex flex-col gap-6 md:gap-16 w-full md:w-auto">
+                <div class="glass-panel p-3 md:p-4 rounded-lg w-full md:w-40 text-center md:text-left">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Temperatura</div>
+                    <div class="flex justify-center md:justify-start items-end gap-1">
+                        <span id="hud-temp" class="text-3xl lg:text-4xl font-light text-white transition-colors">24.0</span>
+                        <span class="text-sm text-slate-300 pb-1">°C</span>
+                    </div>
+                    <div class="text-[9px] text-red-400 mt-1">LMT: 60.0 °C</div>
+                </div>
+
+                <div class="glass-panel p-3 md:p-4 rounded-lg w-full md:w-40 text-center md:text-left">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Vibração (X)</div>
+                    <div class="flex justify-center md:justify-start items-end gap-1">
+                        <span id="hud-vib" class="text-3xl lg:text-4xl font-light text-white transition-colors">0.1</span>
+                        <span class="text-sm text-slate-300 pb-1">g</span>
+                    </div>
+                    <div class="text-[9px] text-red-400 mt-1">LMT: 10.0 g</div>
+                </div>
+            </div>
+
+            <div id="machine-svg-container" class="relative z-20 flex flex-col items-center justify-center my-8 md:my-0 status-STOPPED transition-all duration-500">
+                <svg id="svg-motor" class="w-40 h-40 md:w-56 md:h-56 lg:w-64 lg:h-64 transition-all" viewBox="0 0 100 100" fill="currentColor">
+                    <rect x="25" y="30" width="50" height="40" rx="4" />
+                    <rect x="35" y="20" width="30" height="10" rx="2" />
+                    <rect x="10" y="45" width="15" height="10" rx="1" />
+                    <line x1="30" y1="35" x2="30" y2="65" stroke="#0f172a" stroke-width="2"/>
+                    <line x1="40" y1="35" x2="40" y2="65" stroke="#0f172a" stroke-width="2"/>
+                    <line x1="50" y1="35" x2="50" y2="65" stroke="#0f172a" stroke-width="2"/>
+                    <line x1="60" y1="35" x2="60" y2="65" stroke="#0f172a" stroke-width="2"/>
+                    <line x1="70" y1="35" x2="70" y2="65" stroke="#0f172a" stroke-width="2"/>
+                </svg>
+                <div id="state-label" class="mt-6 font-black tracking-widest text-lg md:text-xl drop-shadow-md text-center">STOPPED</div>
+            </div>
+
+            <div class="flex flex-col gap-6 md:gap-16 w-full md:w-auto">
+                <div class="glass-panel p-3 md:p-4 rounded-lg w-full md:w-40 text-center md:text-right">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Corrente</div>
+                    <div class="flex justify-center md:justify-end items-end gap-1">
+                        <span id="hud-curr" class="text-3xl lg:text-4xl font-light text-white transition-colors">0.0</span>
+                        <span class="text-sm text-slate-300 pb-1">A</span>
+                    </div>
+                    <div class="text-[9px] text-red-400 mt-1">LMT: 14.0 A</div>
+                </div>
+
+                <div class="glass-panel p-3 md:p-4 rounded-lg w-full md:w-40 text-center md:text-right">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Umidade Rel.</div>
+                    <div class="flex justify-center md:justify-end items-end gap-1">
+                        <span id="hud-hum" class="text-3xl lg:text-4xl font-light text-white">45.0</span>
+                        <span class="text-sm text-slate-300 pb-1">%</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <footer class="shrink-0 bg-slate-950 border-t border-slate-800 p-4 h-auto md:h-40 lg:h-48 flex flex-col md:flex-row gap-4 z-20">
+        
+        <div class="flex-1 glass-panel p-3 lg:p-4 rounded border border-slate-800 flex flex-col justify-center">
+            <h3 class="text-[10px] lg:text-xs text-slate-400 uppercase tracking-widest mb-3 font-bold"><span class="text-blue-500 mr-2">■</span>Atuação de Sensores</h3>
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label class="text-[10px] lg:text-xs text-slate-300 block mb-1">Termopar (°C)</label>
+                    <input type="range" id="sim-temp" min="10" max="100" step="0.5" value="24" class="w-full accent-blue-500">
+                </div>
+                <div>
+                    <label class="text-[10px] lg:text-xs text-slate-300 block mb-1">Amperímetro (A)</label>
+                    <input type="range" id="sim-curr" min="0" max="25" step="0.1" value="0" class="w-full accent-blue-500">
+                </div>
+                <div>
+                    <label class="text-[10px] lg:text-xs text-slate-300 block mb-1">Acelerômetro (g)</label>
+                    <input type="range" id="sim-vib" min="0" max="20" step="0.1" value="0.1" class="w-full accent-blue-500">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 bg-black rounded border border-slate-800 p-2 flex flex-col font-mono text-[9px] lg:text-[10px] relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full bg-slate-900 text-slate-400 px-2 py-1 text-[9px] border-b border-slate-800 flex justify-between z-10">
+                <span>TERMINAL_I/O</span>
+                <span class="text-blue-500">MQTT_WS</span>
+            </div>
+            <div id="sys-log" class="mt-6 overflow-y-auto flex-1 space-y-1 text-slate-300 px-1 pb-1">
+                <div class="text-slate-600">// Axophy Edge Kernel v2.0 - Aguardando comandos externos...</div>
+            </div>
+        </div>
+
+    </footer>
+
+    <script src="digitaltwin.js"></script>
+</body>
+</html>
