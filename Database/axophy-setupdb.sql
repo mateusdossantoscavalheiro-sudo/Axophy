@@ -1,12 +1,13 @@
 -- ==============================================================================
--- AXOPHY CORE SYSTEM - DATABASE SETUP SCRIPT
+-- AXOPHY CORE SYSTEM - DATABASE PRODUCTION SCRIPT
 -- ==============================================================================
 
--- 1. Limpeza de ambiente (CUIDADO: remove as tabelas se já existirem)
+-- 1. Limpeza de ambiente para recriação limpa (CUIDADO: remove tabelas existentes)
 DROP TABLE IF EXISTS telemetry_log CASCADE;
 DROP TABLE IF EXISTS assets CASCADE;
 
--- 2. Criação da entidade principal (Ativos / Motores)
+-- 2. Entidade Principal: Ativos (assets)
+-- Armazena o registro cadastral, especificações de limites e estado conhecido
 CREATE TABLE assets (
     id INT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -16,7 +17,9 @@ CREATE TABLE assets (
     state VARCHAR(20) DEFAULT 'OFFLINE'
 );
 
--- 3. Criação da entidade temporal (Histórico de Telemetria)
+-- 3. Entidade Temporal: Histórico de Telemetria (telemetry_log)
+-- Registra as amostras temporais enviadas pelo hardware
+-- Utilizamos NUMERIC(5,2) como mecanismo anti-crash para evitar dízimas periódicas no JSON
 CREATE TABLE telemetry_log (
     log_id BIGSERIAL PRIMARY KEY,
     asset_id INT NOT NULL,
@@ -32,18 +35,12 @@ CREATE TABLE telemetry_log (
         ON DELETE CASCADE
 );
 
--- 4. Otimização de Performance (Índice B-Tree exigido no Tópico 5.3)
--- Garante que o painel do Gestor carregue o histórico instantaneamente sem lag
+-- 4. Otimização de Performance
+-- Índice Composto B-Tree para evitar Table Scan completo e garantir carregamento rápido no painel do Gestor
 CREATE INDEX idx_asset_time ON telemetry_log (asset_id, created_at DESC);
 
--- 5. Configuração de Permissões (Supabase)
--- Desativamos o RLS (Row Level Security) temporariamente para não bloquear
--- as inserções da API Java durante a fase de desenvolvimento.
-ALTER TABLE assets DISABLE ROW LEVEL SECURITY;
-ALTER TABLE telemetry_log DISABLE ROW LEVEL SECURITY;
-
--- 6. Inserção de Dados Mestre (Mock inicial para testar o Frontend/Backend)
+-- 5. Inserção de Dados Mestre Base (Para testes da API Java)
 INSERT INTO assets (id, name, limittemp, limitcurr, limitvib, state) VALUES 
-(1, 'Main Lathe #01', 60.00, 14.00, 10.00, 'STOPPED'),
+(1, 'MTR-01 | Motor de Indução', 60.00, 14.00, 10.00, 'STOPPED'),
 (2, 'CNC Milling #01', 45.00, 12.00, 8.00, 'STOPPED'),
 (3, 'Cooling Pump #A', 55.00, 10.00, 5.00, 'OFFLINE');
